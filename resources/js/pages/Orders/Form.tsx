@@ -50,7 +50,7 @@ export default function OrderForm({ order, cars, noCarMessage }: { order?: Order
         ) {
             setData('car_id', '');
         }
-    }, [data.pickup_date, data.dropoff_date, cars]);
+    }, [data.pickup_date, data.dropoff_date, cars, carOptions, data.car_id, setData]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
