@@ -73,6 +73,12 @@ return [
             'url'        => env('APP_URL') . '/storage/profile-images',
             'visibility' => 'public',
         ],
+        'car-images'     => [
+            'driver'     => 'local',
+            'root'       => storage_path('app/public/car-images'),
+            'url'        => env('APP_URL') . '/storage/car-images',
+            'visibility' => 'public',
+        ],
 
     ],
 
