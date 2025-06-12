@@ -1,65 +1,63 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Repositories\Contracts\OrderRepositoryInterface;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected $orderRepository;
+
+    public function __construct(OrderRepositoryInterface $orderRepository)
+    {
+        $this->orderRepository = $orderRepository;
+    }
+
     public function index()
     {
-        //
+        $orders = $this->orderRepository->all();
+        return response()->json($orders);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'car_id'           => 'required|exists:cars,id',
+            'order_date'       => 'required|date',
+            'pickup_date'      => 'required|date',
+            'dropoff_date'     => 'required|date|after_or_equal:pickup_date',
+            'pickup_location'  => 'required|string|max:50',
+            'dropoff_location' => 'required|string|max:50',
+        ]);
+        $order = $this->orderRepository->create($data);
+        return response()->json($order, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Order $order)
+    public function show($id)
     {
-        //
+        $order = $this->orderRepository->find($id);
+        return response()->json($order);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Order $order)
+    public function update(Request $request, $id)
     {
-        //
+        $order = $this->orderRepository->find($id);
+        $data  = $request->validate([
+            'car_id'           => 'sometimes|required|exists:cars,id',
+            'order_date'       => 'sometimes|required|date',
+            'pickup_date'      => 'sometimes|required|date',
+            'dropoff_date'     => 'sometimes|required|date|after_or_equal:pickup_date',
+            'pickup_location'  => 'sometimes|required|string|max:50',
+            'dropoff_location' => 'sometimes|required|string|max:50',
+        ]);
+        $order = $this->orderRepository->update($order, $data);
+        return response()->json($order);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Order $order)
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Order $order)
-    {
-        //
+        $order = $this->orderRepository->find($id);
+        $this->orderRepository->delete($order);
+        return response()->json(['message' => 'Order deleted']);
     }
 }
