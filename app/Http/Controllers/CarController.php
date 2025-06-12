@@ -48,15 +48,15 @@ class CarController extends Controller
             $query->orderBy($columns[$request->order[0]['column']], $request->order[0]['dir']);
         }
 
-        $data = DataTable::paginate($query, $request);
-
+        $data         = DataTable::paginate($query, $request);
         $data['data'] = collect($data['data'])->map(function ($car) {
+            $media = $car->getMedia('car-images')->first();
             return [
                 'id'         => $car->id,
                 'car_name'   => $car->car_name,
                 'day_rate'   => $car->day_rate,
                 'month_rate' => $car->month_rate,
-                'image_car'  => $car->image_car,
+                'image_car'  => $media ? $media->getFullUrl() : null,
                 'created_at' => $car->created_at->toDateTimeString(),
                 'actions'    => '',
             ];
@@ -65,21 +65,21 @@ class CarController extends Controller
         return response()->json($data);
     }
 
-        public function create()
+    public function create()
     {
         return Inertia::render('Cars/Form', [
             'carImage' => null,
         ]);
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
         $data = $request->validate([
-            'car_name'   => 'required|string',
-            'day_rate'   => 'required|numeric',
-            'month_rate' => 'required|numeric',
-            'image_car'  => 'nullable|string',
-            'car-images' => 'array|max:1',
+            'car_name'     => 'required|string',
+            'day_rate'     => 'required|numeric',
+            'month_rate'   => 'required|numeric',
+            'image_car'    => 'nullable|string',
+            'car-images'   => 'array|max:1',
             'car-images.*' => 'string',
         ]);
         $car = $this->carRepository->create($data);
@@ -90,20 +90,20 @@ class CarController extends Controller
         return redirect()->route('cars.index')->with('success', 'Car berhasil dibuat.');
     }
 
-       public function edit($id)
+    public function edit($id)
     {
-        $car = $this->carRepository->find($id);
-        $media = $car->getMedia('car-images')->first();
+        $car      = $this->carRepository->find($id);
+        $media    = $car->getMedia('car-images')->first();
         $carImage = $media
-            ? [
-                'file_name' => $media->file_name,
-                'size'      => $media->size,
-                'url'       => $media->getFullUrl(),
-            ]
-            : null;
+        ? [
+            'file_name' => $media->file_name,
+            'size'      => $media->size,
+            'url'       => $media->getFullUrl(),
+        ]
+        : null;
 
         return Inertia::render('Cars/Form', [
-            'car' => $car,
+            'car'      => $car,
             'carImage' => $carImage,
         ]);
     }
@@ -112,11 +112,11 @@ class CarController extends Controller
     {
         $car  = $this->carRepository->find($id);
         $data = $request->validate([
-            'car_name'   => 'sometimes|required|string',
-            'day_rate'   => 'sometimes|required|numeric',
-            'month_rate' => 'sometimes|required|numeric',
-            'image_car'  => 'nullable|string',
-            'car-images' => 'array|max:1',
+            'car_name'     => 'sometimes|required|string',
+            'day_rate'     => 'sometimes|required|numeric',
+            'month_rate'   => 'sometimes|required|numeric',
+            'image_car'    => 'nullable|string',
+            'car-images'   => 'array|max:1',
             'car-images.*' => 'string',
         ]);
         $this->carRepository->update($car, $data);
@@ -126,7 +126,7 @@ class CarController extends Controller
 
         return redirect()->route('cars.index')->with('success', 'Car berhasil diperbarui.');
     }
-        public function upload(Request $request)
+    public function upload(Request $request)
     {
         $request->validate([
             'car-images.*' => 'required|file|image|max:2048',

@@ -13,7 +13,16 @@ const columns = [
     { data: 'car_name', title: 'Car Name' },
     { data: 'day_rate', title: 'Day Rate' },
     { data: 'month_rate', title: 'Month Rate' },
-    { data: 'image_car', title: 'Image' },
+    {
+        data: 'image_car',
+        title: 'Image',
+        orderable: false,
+        searchable: false,
+        render: (data: string | null) =>
+            data
+                ? `<img src="${data}" alt="Car Image" class="h-12 w-20 object-cover rounded" />`
+                : '<span class="text-gray-400">No Image</span>',
+    },
     { data: 'created_at', title: 'Created At' },
     {
         data: null,
