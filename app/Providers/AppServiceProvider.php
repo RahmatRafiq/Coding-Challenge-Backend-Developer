@@ -2,10 +2,13 @@
 namespace App\Providers;
 
 use App\Observers\ActivityObserver;
+use App\Repositories\CarRepository;
+use App\Repositories\Contracts\CarRepositoryInterface;
+use App\Repositories\Contracts\OrderRepositoryInterface;
+use App\Repositories\OrderRepository;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Activitylog\Models\Activity;
-use Illuminate\Support\Facades\Broadcast;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,6 +17,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(CarRepositoryInterface::class, CarRepository::class);
+        $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
 
     }
 
