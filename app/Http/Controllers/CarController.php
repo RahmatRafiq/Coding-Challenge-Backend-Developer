@@ -2,10 +2,12 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\DataTable;
+use App\Helpers\MediaLibrary;
 use App\Models\Car;
 use App\Repositories\Contracts\CarRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Storage;
 
 class CarController extends Controller
 {
@@ -63,28 +65,46 @@ class CarController extends Controller
         return response()->json($data);
     }
 
-    public function create()
+        public function create()
     {
-        return Inertia::render('Cars/Form');
+        return Inertia::render('Cars/Form', [
+            'carImage' => null,
+        ]);
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $data = $request->validate([
             'car_name'   => 'required|string',
             'day_rate'   => 'required|numeric',
             'month_rate' => 'required|numeric',
             'image_car'  => 'nullable|string',
+            'car-images' => 'array|max:1',
+            'car-images.*' => 'string',
         ]);
         $car = $this->carRepository->create($data);
+
+        // Simpan media
+        MediaLibrary::put($car, 'car-images', $request, 'car-images');
+
         return redirect()->route('cars.index')->with('success', 'Car berhasil dibuat.');
     }
 
-    public function edit($id)
+       public function edit($id)
     {
         $car = $this->carRepository->find($id);
+        $media = $car->getMedia('car-images')->first();
+        $carImage = $media
+            ? [
+                'file_name' => $media->file_name,
+                'size'      => $media->size,
+                'url'       => $media->getFullUrl(),
+            ]
+            : null;
+
         return Inertia::render('Cars/Form', [
             'car' => $car,
+            'carImage' => $carImage,
         ]);
     }
 
@@ -96,11 +116,45 @@ class CarController extends Controller
             'day_rate'   => 'sometimes|required|numeric',
             'month_rate' => 'sometimes|required|numeric',
             'image_car'  => 'nullable|string',
+            'car-images' => 'array|max:1',
+            'car-images.*' => 'string',
         ]);
         $this->carRepository->update($car, $data);
+
+        // Update media
+        MediaLibrary::put($car, 'car-images', $request, 'car-images');
+
         return redirect()->route('cars.index')->with('success', 'Car berhasil diperbarui.');
     }
+        public function upload(Request $request)
+    {
+        $request->validate([
+            'car-images.*' => 'required|file|image|max:2048',
+        ]);
 
+        $file     = $request->file('car-images')[0];
+        $tempPath = $file->store('', 'temp');
+
+        return response()->json([
+            'name' => basename($tempPath),
+            'url'  => Storage::disk('temp')->url($tempPath),
+        ]);
+    }
+    public function deleteFile(Request $request)
+    {
+        $data = $request->validate(['filename' => 'required|string']);
+
+        if (Storage::disk('car-images')->exists($data['filename'])) {
+            Storage::disk('car-images')->delete($data['filename']);
+        }
+
+        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('file_name', $data['filename'])->first();
+        if ($media) {
+            $media->delete();
+        }
+
+        return response()->json(['message' => 'File berhasil dihapus'], 200);
+    }
     public function destroy($id)
     {
         $car = $this->carRepository->find($id);
