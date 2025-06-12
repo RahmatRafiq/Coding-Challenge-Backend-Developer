@@ -18,6 +18,12 @@ class Order extends Model
         'dropoff_location',
     ];
 
+    protected $casts = [
+        'order_date' => 'datetime',
+        'pickup_date' => 'datetime',
+        'dropoff_date' => 'datetime',
+    ];
+
     public function car()
     {
         return $this->belongsTo(Car::class);
