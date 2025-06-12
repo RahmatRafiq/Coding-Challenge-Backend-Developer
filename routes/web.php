@@ -37,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('users/{user}/restore', [\App\Http\Controllers\UserRolePermission\UserController::class, 'restore'])->name('users.restore');
     Route::delete('users/{user}/force-delete', [\App\Http\Controllers\UserRolePermission\UserController::class, 'forceDelete'])->name('users.force-delete');
 
+    Route::resource('cars', \App\Http\Controllers\CarController::class);
+    Route::resource('orders', \App\Http\Controllers\OrderController::class);
+
     Route::post('logout', [SocialAuthController::class, 'logout'])->name('logout');
 
 });
