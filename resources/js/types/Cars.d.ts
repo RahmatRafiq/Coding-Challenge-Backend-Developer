@@ -1,4 +1,3 @@
-
 export interface Car {
     id: number;
     car_name: string;
@@ -8,4 +7,10 @@ export interface Car {
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
+}
+
+export interface CarImageMedia {
+    file_name: string;
+    size: number;
+    url: string;
 }
