@@ -20,6 +20,16 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Cars Management',
+        href: '/cars',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Orders Management',
+        href: '/orders',
+        icon: LayoutGrid,
+    },
+    {
         title: 'Users Management',
         href: '',
         icon: Users,
