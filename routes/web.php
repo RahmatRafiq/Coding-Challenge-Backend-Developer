@@ -37,6 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('users/{user}/restore', [\App\Http\Controllers\UserRolePermission\UserController::class, 'restore'])->name('users.restore');
     Route::delete('users/{user}/force-delete', [\App\Http\Controllers\UserRolePermission\UserController::class, 'forceDelete'])->name('users.force-delete');
 
+    Route::post('/cars/upload', [\App\Http\Controllers\CarController::class, 'upload'])->name('cars.upload');
+Route::delete('/cars/delete-file', [\App\Http\Controllers\CarController::class, 'deleteFile'])->name('cars.deleteFile');
     Route::post('cars/json', [\App\Http\Controllers\CarController::class, 'json'])->name('cars.json');
     Route::resource('cars', \App\Http\Controllers\CarController::class);
 
