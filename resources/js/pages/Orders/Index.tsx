@@ -10,6 +10,8 @@ import { Order } from '@/types/Orders';
 
 const columns = [
     { data: 'id', title: 'ID' },
+    // { data: 'car_id', title: 'Car ID' }, // Uncomment if car_id is needed
+    { data: 'car.car_name', title: 'Car Name' }, // <-- perbaiki di sini
     { data: 'order_date', title: 'Order Date' },
     { data: 'pickup_date', title: 'Pickup Date' },
     { data: 'dropoff_date', title: 'Dropoff Date' },
