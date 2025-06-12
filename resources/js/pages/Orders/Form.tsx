@@ -1,5 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect } from 'react';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { Separator } from '@/components/ui/separator';
 
-export default function OrderForm({ order, cars }: { order?: Order; cars: Car[] }) {
+export default function OrderForm({ order, cars, noCarMessage }: { order?: Order; cars: Car[]; noCarMessage?: string }) {
     const isEdit = !!order;
     const { data, setData, post, put, processing, errors } = useForm({
         car_id: order ? order.car_id : '',
@@ -43,31 +43,47 @@ export default function OrderForm({ order, cars }: { order?: Order; cars: Car[] 
         label: car.car_name,
     }));
 
+    useEffect(() => {
+        if (
+            carOptions.length === 0 ||
+            !carOptions.some(option => option.value === data.car_id)
+        ) {
+            setData('car_id', '');
+        }
+    }, [data.pickup_date, data.dropoff_date, cars]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isEdit ? 'Edit Order' : 'Create Order'} />
             <div className="px-4 py-6">
                 <h1 className="text-2xl font-semibold mb-4">Order Management</h1>
-
                 <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
                     <Separator className="my-6 md:hidden" />
-
                     <div className="flex-1 md:max-w-2xl space-y-6">
                         <HeadingSmall
                             title={isEdit ? 'Edit Order' : 'Create Order'}
                             description="Fill in the details below"
                         />
-
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <Label htmlFor="car_id">Car</Label>
-                                <CustomSelect
-                                    id="car_id"
-                                    options={carOptions}
-                                    value={carOptions.find(option => option.value === data.car_id)}
-                                    onChange={(selected) => setData('car_id', (selected as { value: number }).value)}
-                                    required
-                                />
+                                {!data.pickup_date || !data.dropoff_date ? (
+                                    <div className="text-gray-500 text-sm mb-2">
+                                        Silakan pilih tanggal pickup dan dropoff terlebih dahulu.
+                                    </div>
+                                ) : carOptions.length === 0 ? (
+                                    <div className="text-red-600 text-sm mb-2">
+                                        {noCarMessage || 'Semua mobil telah diorder pada tanggal yang dipilih.'}
+                                    </div>
+                                ) : (
+                                    <CustomSelect
+                                        id="car_id"
+                                        options={carOptions}
+                                        value={carOptions.find(option => option.value === data.car_id)}
+                                        onChange={(selected) => setData('car_id', (selected as { value: number }).value)}
+                                        required
+                                    />
+                                )}
                                 <InputError message={errors.car_id} />
                             </div>
 

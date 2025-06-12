@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\DataTable;
+use App\Models\Car;
 use App\Models\Order;
 use App\Repositories\Contracts\OrderRepositoryInterface;
 use Illuminate\Http\Request;
@@ -40,7 +41,7 @@ class OrderController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
                     ->orWhereHas('car', function ($q) use ($search) {
-                        $q->where('car_name', 'like', "%{$search}%"); // perbaiki field
+                        $q->where('car_name', 'like', "%{$search}%");
                     });
             });
         }
@@ -71,12 +72,25 @@ class OrderController extends Controller
         return response()->json($data);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        // Eager load cars for the form
-        $cars = \App\Models\Car::all(['id', 'car_name']);
+        $pickup  = $request->input('pickup_date');
+        $dropoff = $request->input('dropoff_date');
+
+        $cars         = [];
+        $noCarMessage = null;
+        if ($pickup && $dropoff) {
+            $cars = Car::availableFor($pickup, $dropoff)->get(['id', 'car_name']);
+            if ($cars->isEmpty()) {
+                $noCarMessage = 'Semua mobil telah diorder pada tanggal yang dipilih.';
+            }
+        } else {
+            $cars = Car::all(['id', 'car_name']);
+        }
+
         return Inertia::render('Orders/Form', [
-            'cars' => $cars,
+            'cars'         => $cars,
+            'noCarMessage' => $noCarMessage,
         ]);
     }
 
@@ -90,6 +104,21 @@ class OrderController extends Controller
             'pickup_location'  => 'required|string|max:50',
             'dropoff_location' => 'required|string|max:50',
         ]);
+
+        $overlap = Order::where('car_id', $data['car_id'])
+            ->whereNull('deleted_at')
+            ->where(function ($q) use ($data) {
+                $q->where('pickup_date', '<=', $data['dropoff_date'])
+                    ->where('dropoff_date', '>=', $data['pickup_date']);
+            })
+            ->exists();
+
+        if ($overlap) {
+            return back()
+                ->withErrors(['car_id' => 'Mobil ini sedang diorder pada tanggal tersebut.'])
+                ->withInput();
+        }
+
         $order = $this->orderRepository->create($data);
         return redirect()->route('orders.index')->with('success', 'Order berhasil dibuat.');
     }
@@ -97,10 +126,11 @@ class OrderController extends Controller
     public function edit($id)
     {
         $order = $this->orderRepository->find($id);
-        $cars = \App\Models\Car::all(['id', 'car_name']);
+        $cars = Car::all(['id', 'car_name']);
+
         return Inertia::render('Orders/Form', [
             'order' => $order,
-            'cars' => $cars,
+            'cars'  => $cars,
         ]);
     }
 
@@ -115,6 +145,22 @@ class OrderController extends Controller
             'pickup_location'  => 'sometimes|required|string|max:50',
             'dropoff_location' => 'sometimes|required|string|max:50',
         ]);
+
+        $overlap = Order::where('car_id', $data['car_id'])
+            ->where('id', '!=', $id)
+            ->whereNull('deleted_at')
+            ->where(function ($q) use ($data) {
+                $q->where('pickup_date', '<=', $data['dropoff_date'])
+                    ->where('dropoff_date', '>=', $data['pickup_date']);
+            })
+            ->exists();
+
+        if ($overlap) {
+            return back()
+                ->withErrors(['car_id' => 'Mobil ini sedang diorder pada tanggal tersebut.'])
+                ->withInput();
+        }
+
         $this->orderRepository->update($order, $data);
         return redirect()->route('orders.index')->with('success', 'Order berhasil diperbarui.');
     }
